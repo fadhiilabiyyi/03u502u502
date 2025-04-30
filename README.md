@@ -9,7 +9,7 @@ What a "wah" question.
 
 ## Flowchart
 Can't read it?, Maybe you need some help dude.
-![Flowchart](public/License3J.png)
+![Flowchart](https://raw.githubusercontent.com/fadhiilabiyyi/03u502u502/refs/heads/master/public/License3J.png)
 
 ### Generate Public and Private Key
 To lazy to write about it
