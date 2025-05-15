@@ -9,7 +9,7 @@ For Safety.
 
 ## Flowchart
 This is Flowchart of how you use this license
-![Flowchart](public/License3J.png)
+![Flowchart](https://raw.githubusercontent.com/fadhiilabiyyi/03u502u502/refs/heads/master/public/License3J.png)
 
 ### Generate Public and Private Key
 1. Run License3J REPL with `java -jar License3jrepl-3.1.5-jar-with-dependencies.jar` command
