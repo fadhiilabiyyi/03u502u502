@@ -14,6 +14,8 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Enumeration;
@@ -34,8 +36,15 @@ public class LicenseValidator {
         try {
             log.info("[LicenseService] - Checking License");
 
-            License license = new License();
-            this.loadLicense(license);
+            License license = loadLicense();
+
+            // Load License
+            if (!license.isOK(LicenseKeyHolder.key)) {
+                // Stop Application
+                log.error("[LicenseService] - License is not valid!");
+                licenseExpired = true;
+                throw new CertificateNotYetValidException("License is not valid!");
+            }
 
             String macAddress = license.get("macAddress").getString();
             Date expireDate = license.get("expireDate").getDate();
@@ -84,6 +93,7 @@ public class LicenseValidator {
         return licenseExpired;
     }
 
+    // TODO user email can be get on the license feature
     public void licenseExpiredNotification(Date date) {
         Instant expirationInstant = date.toInstant().minusMillis(604_800_000);
         if (expirationInstant != null) {
@@ -100,33 +110,30 @@ public class LicenseValidator {
         }
     }
 
+    // TODO : Send Email to user
     public void sendEmailToUser() {
 
     }
 
-    private void loadLicense(License license) throws IOException {
+    private License loadLicense() throws IOException {
         byte[] licenseBytes = Files.readAllBytes(Paths.get("license.bin"));
-        new LicenseReader(new ByteArrayInputStream(licenseBytes)).read();
-
-        // Load License
-        if (!license.isOK(LicenseKeyHolder.key)) {
-            // Stop Application
-            log.warn("[LicenseService] - License is not valid!");
-            licenseExpired = true;
-        }
+        return new LicenseReader(new ByteArrayInputStream(licenseBytes)).read();
     }
 
-    private void validateMac(String macAddress) throws SocketException {
+    private void validateMac(String macAddress) throws SocketException, CertificateNotYetValidException {
         if (!macAddress.equals(this.getPreferredMacAddress())) {
             log.warn("[LicenseService] - Mac Address did not match");
             licenseExpired = true;
+            throw new CertificateNotYetValidException("Mac Address did not match!");
         }
     }
 
-    private void validateDate(Date expiredDate) {
+    private void validateDate(Date expiredDate) throws CertificateExpiredException {
         if (new Date().after(expiredDate)) {
             log.warn("[LicenseService] - License is expired");
             licenseExpired = true;
+
+            throw new CertificateExpiredException("License is expired");
         } else {
             licenseExpiredNotification(expiredDate);
             scheduledLicenseCheck(expiredDate);
